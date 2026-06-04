@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
-import requests
 
 st.set_page_config(
     page_title="홈앤쇼핑 일일 매출 현황",
@@ -31,6 +30,8 @@ body {
 # Supabase REST API에서 데이터 로드
 @st.cache_data(ttl=10)
 def load_data():
+    import requests
+
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
 

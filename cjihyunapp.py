@@ -56,7 +56,7 @@ delta = today_sales - yesterday_sales
 delta_pct = (delta / yesterday_sales) * 100
 
 # 페이지 제목
-st.title("홈앤쇼핑 일일 매출 현황")
+st.title("🏪 홈앤쇼핑 일일 매출 현황")
 
 # 메트릭 카드 (3개 컬럼)
 col1, col2, col3 = st.columns(3)
@@ -90,7 +90,7 @@ chart_col1, chart_col2 = st.columns(2)
 
 # 선 차트: 일별 매출 추이
 with chart_col1:
-    st.subheader("일별 매출 추이")
+    st.subheader("📈 일별 매출 추이")
 
     fig_line = go.Figure()
     fig_line.add_trace(go.Scatter(
@@ -120,7 +120,7 @@ with chart_col1:
 
 # 원 차트: 최근 10일 PV 비중
 with chart_col2:
-    st.subheader("최근 10일 PV 비중")
+    st.subheader("🎯 최근 10일 PV 비중")
 
     recent_10 = df.tail(10).copy()
     recent_10['날짜_label'] = recent_10['날짜'].dt.strftime('%m/%d')
@@ -150,7 +150,7 @@ with chart_col2:
 
 # 하단 데이터 테이블 (옵션)
 st.divider()
-with st.expander("상세 데이터 보기"):
+with st.expander("📊 상세 데이터 보기"):
     display_df = df.copy()
     display_df['날짜'] = display_df['날짜'].dt.strftime('%Y-%m-%d')
     display_df['방문자수'] = display_df['방문자수'].apply(lambda x: f"{x:,}")
