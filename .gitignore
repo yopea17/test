@@ -1,0 +1,4 @@
+daily_sales_data.csv
+*.pyc
+__pycache__/
+.streamlit/
