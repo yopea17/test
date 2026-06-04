@@ -183,7 +183,7 @@ with chart_col1:
     )
     fig_line.update_yaxes(gridcolor='#E8E8E8')
 
-    st.plotly_chart(fig_line, use_container_width=True)
+    st.plotly_chart(fig_line, use_container_width=False)
 
 # 원 차트: 최근 10일 PV 비중
 with chart_col2:
@@ -213,7 +213,7 @@ with chart_col2:
         paper_bgcolor='white'
     )
 
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, use_container_width=False)
 
 # 하단 데이터 테이블 (옵션)
 st.divider()
@@ -225,4 +225,4 @@ with st.expander("상세 데이터 보기"):
     display_df['주문건수'] = display_df['주문건수'].apply(lambda x: f"{x:,}")
     display_df['순결제금액'] = display_df['순결제금액'].apply(fmt_won)
     display_df['결제금액'] = display_df['결제금액'].apply(fmt_won)
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    st.dataframe(display_df, use_container_width=False, hide_index=True)
