@@ -32,45 +32,75 @@ body {
 def load_data():
     import requests
 
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
+    try:
+        # Secrets 확인
+        if not st.secrets:
+            st.error("❌ Streamlit Secrets이 설정되지 않았습니다.")
+            st.info("Settings → Secrets에서 SUPABASE_URL과 SUPABASE_KEY를 추가하세요.")
+            return None
 
-    # Supabase REST API를 통해 데이터 조회
-    headers = {
-        "apikey": key,
-        "Content-Type": "application/json"
-    }
+        url = st.secrets.get("SUPABASE_URL")
+        key = st.secrets.get("SUPABASE_KEY")
 
-    api_url = f"{url}/rest/v1/daily_sales_data?order=date.asc"
-    response = requests.get(api_url, headers=headers)
+        if not url or not key:
+            st.error("❌ SUPABASE_URL 또는 SUPABASE_KEY가 설정되지 않았습니다.")
+            st.info("Settings → Secrets에서 다음을 추가하세요:\n- SUPABASE_URL\n- SUPABASE_KEY")
+            return None
 
-    if response.status_code != 200:
-        st.error(f"데이터 조회 실패: {response.status_code}")
+        # Supabase REST API를 통해 데이터 조회
+        headers = {
+            "apikey": key,
+            "Content-Type": "application/json"
+        }
+
+        api_url = f"{url}/rest/v1/daily_sales_data?order=date.asc"
+        response = requests.get(api_url, headers=headers, timeout=10)
+
+        if response.status_code != 200:
+            st.error(f"❌ Supabase 데이터 조회 실패 (상태 코드: {response.status_code})")
+            st.write(f"응답: {response.text}")
+            return None
+
+        data = response.json()
+
+        if not data:
+            st.warning("⚠️ Supabase에 데이터가 없습니다.")
+            return None
+
+        # DataFrame으로 변환
+        df = pd.DataFrame(data)
+
+        # 컬럼명 한글로 변환
+        df = df.rename(columns={
+            'date': '날짜',
+            'visitors': '방문자수',
+            'pv': 'PV',
+            'orders': '주문건수',
+            'conversion_rate': '주문전환율(%)',
+            'net_payment': '순결제금액',
+            'total_payment': '결제금액'
+        })
+
+        # 날짜를 datetime으로 변환
+        df['날짜'] = pd.to_datetime(df['날짜'])
+
+        # 불필요한 컬럼 제거
+        df = df.drop(['id', 'created_at'], axis=1, errors='ignore')
+
+        return df
+
+    except KeyError as e:
+        st.error(f"❌ Secrets 설정 오류: {str(e)}")
+        st.info("Settings → Secrets에서 필요한 키를 확인하세요.")
         return None
-
-    data = response.json()
-
-    # DataFrame으로 변환
-    df = pd.DataFrame(data)
-
-    # 컬럼명 한글로 변환
-    df = df.rename(columns={
-        'date': '날짜',
-        'visitors': '방문자수',
-        'pv': 'PV',
-        'orders': '주문건수',
-        'conversion_rate': '주문전환율(%)',
-        'net_payment': '순결제금액',
-        'total_payment': '결제금액'
-    })
-
-    # 날짜를 datetime으로 변환
-    df['날짜'] = pd.to_datetime(df['날짜'])
-
-    # 불필요한 컬럼 제거
-    df = df.drop(['id', 'created_at'], axis=1, errors='ignore')
-
-    return df
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ 네트워크 오류: {str(e)}")
+        return None
+    except Exception as e:
+        st.error(f"❌ 예기치 않은 오류: {str(e)}")
+        import traceback
+        st.write(traceback.format_exc())
+        return None
 
 def fmt_won(value):
     """원화 포맷 함수"""
@@ -79,14 +109,20 @@ def fmt_won(value):
 # 데이터 로드
 df = load_data()
 
+# 데이터 로드 실패 시 처리
+if df is None or df.empty:
+    st.title("홈앤쇼핑 일일 매출 현황")
+    st.error("❌ 데이터를 불러올 수 없습니다.")
+    st.stop()
+
+# 페이지 제목
+st.title("홈앤쇼핑 일일 매출 현황")
+
 # 오늘과 어제 데이터
 today_sales = df.iloc[-1]['결제금액']
 yesterday_sales = df.iloc[-2]['결제금액']
 delta = today_sales - yesterday_sales
 delta_pct = (delta / yesterday_sales) * 100
-
-# 페이지 제목
-st.title("홈앤쇼핑 일일 매출 현황")
 
 # 메트릭 카드 (3개 컬럼)
 col1, col2, col3 = st.columns(3)
